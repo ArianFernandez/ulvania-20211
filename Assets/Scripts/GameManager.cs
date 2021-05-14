@@ -14,7 +14,7 @@ public class GameManager : MonoBehaviour
     Animator animmatorHero;
     SpriteRenderer srHero;
     CapsuleCollider2D colliderHero;
-    //private bool isRunning = false;
+    private bool jump = false;
     private float movement;
 
     void Start()
@@ -25,10 +25,31 @@ public class GameManager : MonoBehaviour
         colliderHero = hero.GetComponent<CapsuleCollider2D>();
     }
 
-    // Update is called once per frame
+
+    private void FixedUpdate()
+    {
+        rbHero.velocity = new Vector2(movement * heroSpeed, rbHero.velocity.y);
+
+        if (rbHero.velocity.y < 0)
+        {
+            // Esta cayendo
+            rbHero.velocity += Vector2.up * Physics2D.gravity * (fallMultiplier - 1) * Time.deltaTime;
+        }else if (rbHero.velocity.y > 0 && !Input.GetKey(KeyCode.Space))
+        {
+            rbHero.velocity += Vector2.up * Physics2D.gravity * (lowJumpMultiplier - 1  ) * Time.deltaTime;
+        }
+
+        if (jump)
+        {
+            rbHero.velocity = new Vector2(rbHero.velocity.x, heroJumpSpeed);
+            jump = !jump;
+        }
+    }
+
     void Update()
     {
         movement = Input.GetAxisRaw("Horizontal");
+
         if (movement < 0)
         {
             srHero.flipX = true;
@@ -43,11 +64,11 @@ public class GameManager : MonoBehaviour
             animmatorHero.SetBool("isRunning", false);
         }
 
-        rbHero.velocity = new Vector2(movement * heroSpeed, rbHero.velocity.y);
 
         if (!IsJumping()) // puede ser un or (if (!isJumping() && !isJumping <--- no esta tan bien
         {
             animmatorHero.SetBool("isJumping", false);
+            jump = false;
         }
 
         if (!IsJumping() && Input.GetKey(KeyCode.Space))
@@ -55,21 +76,14 @@ public class GameManager : MonoBehaviour
             Jump();
         }
         
-        if (rbHero.velocity.y < 0)
-        {
-            // Esta cayendo
-            rbHero.velocity += Vector2.up * Physics2D.gravity * (fallMultiplier - 1) * Time.deltaTime;
-        }else if (rbHero.velocity.y > 0 && !Input.GetKey(KeyCode.Space))
-        {
-            rbHero.velocity += Vector2.up * Physics2D.gravity * (lowJumpMultiplier - 1  ) * Time.deltaTime;
-        }
     }
 
     private void Jump()
     {
+        jump = true;
         animmatorHero.SetBool("isJumping", true);
         animmatorHero.SetTrigger("jump");
-        rbHero.velocity = new Vector2(rbHero.velocity.x, heroJumpSpeed);
+        
     }
 
     private bool IsJumping()
